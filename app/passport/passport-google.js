@@ -1,5 +1,5 @@
 const passport = require('passport');
-const localStrategy = require('passport-local').Strategy;
+const googleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const User = require('app/models/user');
 
 
@@ -13,3 +13,23 @@ passport.deserializeUser(function(id, done) {
     });
 });
 
+passport.use(new googleStrategy({
+    clientID: config.service.google.client_key,
+    clientSecret: config.service.google.secret_key,
+    callbackURL: config.service.google.callback_url
+},(token, refreshToken, profile, done) => {
+    User.findOne({email: profile.emails[0].value}, (err, user) => {
+        if(err) return done(err);
+        if(user) return done(null, user);
+
+        const newUser = new User({
+            name : profile.displayName,
+            email: profile.emails[0].value,
+            password: profile.id
+        });
+        newUser.save( err => {
+            if(err) throw err;
+            done(null, newUser);
+        })
+    })
+}));

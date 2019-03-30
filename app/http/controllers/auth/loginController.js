@@ -4,17 +4,17 @@ const passport = require('passport');
 class loginController extends controller {
     showLoginForm(req, res){
         const title = 'صفحه ورود';
-        res.render('home/auth/login',{errors: req.flash('errors'), recaptcha: this.recaptcha.render(), title});
+        res.render('home/auth/login',{recaptcha: this.recaptcha.render(), title});
     }
 
-    loginProcess(req, res, next){
-        this.recaptchaValidation(req, res)
-        .then(result => this.validationData(req))
-        .then(result => {
-            if(result) this.login(req, res, next)
-            else res.redirect('/auth/login');
-        })
-        .catch(err => console.log(err));
+    async loginProcess(req, res, next){
+        await this.recaptchaValidation(req, res);
+        let result = await this.validationData(req); 
+        if(result){
+            return this.login(req, res, next)
+        }  
+        this.back(req, res);
+    
     }
  
 

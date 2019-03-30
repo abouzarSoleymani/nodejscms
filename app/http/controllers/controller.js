@@ -17,16 +17,17 @@ module.exports = class controller{
     recaptchaValidation(req, res){
         return new Promise((resolve, reject) => {
             this.recaptcha.verify(req, (err, data) => {
+                console.log(err, data)
                 console.log(err);
                 if(err){
                     req.flash('errors', 'لطفا کد امنیتی را تاییدنمایید');
-                    res.redirect(req.originalUrl);
+                    this.back(req, res);
                 } else resolve(true);
             })
         })
     } 
     
-    async  (req){
+    async validationData (req){
 
         const result = validationResult(req);
         if(!result.isEmpty()){
@@ -39,5 +40,10 @@ module.exports = class controller{
             return false;
         }
         return true;
-    }  
+    }
+   
+   back(req, res){
+       req.flash('formData', req.body)
+       return res.redirect(req.header('Referer') || '/');
+   } 
 }

@@ -3,22 +3,30 @@ const bcrypt = require('bcrypt');
 const uniqueString = require('unique-string');
 
 const userSchema = mongoose.Schema({
-    name: {type: String, require: true},
+    name: {type: String, required: true},
     admin: {type: Boolean, default: 0},
-    email: {type: String ,unique: true, require: true},
-    password: {type: String, require: true },
+    email: {type: String ,unique: true, required: true},
+    password: {type: String, required: true },
     rememberToken: {type: String, default: null}
     },
     {timestamps: true}
     );
 
     userSchema.pre('save', function(next){
-        bcrypt.hash(this.password, bcrypt.genSaltSync(15), (err, hash) => {
-            if(err) console.log(err);
-            this.password = hash;
-            next();
-        })
+        let salt = bcrypt.genSaltSync(15);
+        let hash = bcrypt.hashSync(this.password, salt);
+        this.password = hash;
+        next();
     })
+
+    userSchema.pre('findOneAndUpdate', function(next){
+        let salt = bcrypt.genSaltSync(15);
+        let password = this.getUpdate().$set.password;
+        let hash = bcrypt.hashSync(password, salt);
+        password = hash;
+        next();
+    })
+
 
     userSchema.methods.comparePassword = function(password){
        return bcrypt.compareSync(password, this.password); 
